@@ -85,14 +85,16 @@ async function publish() {
 }
 
 // cliente genérico do corretor: lê o token salvo e faz a chamada, imprimindo o JSON cru.
-// uso: node hermes.mjs api <GET|POST|...> <rota> [jsonBody]
+// uso: node hermes.mjs api <GET|POST|...> <rota> [jsonBody]   (rota sem barra inicial: "tarefas", "config/log?key=x")
+// a rota vai SEM a barra inicial de propósito: no Git Bash do Windows um "/rota" vira caminho (MSYS path mangling).
 async function api(method, p, bodyJson) {
   const token = readToken();
   if (!token) { console.error('Sem sessão. Rode: node hermes.mjs login'); process.exit(1); }
-  if (!method || !p) { console.error('Uso: node hermes.mjs api <METODO> <rota> [json]'); process.exit(1); }
+  if (!method || !p) { console.error('Uso: node hermes.mjs api <METODO> <rota sem barra> [json]'); process.exit(1); }
+  const route = p.startsWith('/') ? p : '/' + p;
   const opts = { method: method.toUpperCase(), headers: { Authorization: 'Bearer ' + token } };
   if (bodyJson) { opts.headers['Content-Type'] = 'application/json'; opts.body = bodyJson; }
-  const r = await fetch(`${HERMES_API}/api${p}`, opts);
+  const r = await fetch(`${HERMES_API}/api${route}`, opts);
   const text = await r.text();
   process.stdout.write(text);
   if (!r.ok) process.exit(1);
